@@ -1,0 +1,110 @@
+[gd_scene load_steps=4 format=2]
+
+[sub_resource type="GDScript" id=1]
+
+script/source = "extends Spatial
+
+const PLAYER_SCENE = \"res://Scenes/Player.tscn\"
+
+onready var Network = get_node(\"/root/Network\");
+
+func _ready():
+	Network.connect(\"spawn_player\", self, \"_spawn_player\");
+	Network.connect(\"remove_player\", self, \"_remove_player\");
+
+func _spawn_player(id):
+	var player = load(PLAYER_SCENE).instance();
+
+	player.name = Network.get_formatted_node_name(id);
+	player.get_node(\"Viewport/Name\").text = player.name
+
+	if id == get_tree().get_network_unique_id():
+		player.set_network_master(id);
+
+		player.player_id = id;
+		player.control = true;
+
+	print(\"added player \" + player.name);
+
+	get_parent().call_deferred(\"add_child\", player);
+
+func _remove_player(id):
+	var pnode = get_tree().get_root().find_node(Network.get_formatted_node_name(id), true, false);
+	if pnode:
+		pnode.queue_free();"
+
+[sub_resource type="PlaneMesh" id=2]
+
+size = Vector2( 1, 1 )
+subdivide_width = 0
+subdivide_depth = 0
+
+[sub_resource type="ConvexPolygonShape" id=3]
+
+points = PoolVector3Array( 0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0, -0.5, -0.5, 0, -0.5 )
+
+[node name="Root" type="Spatial"]
+
+script = SubResource( 1 )
+
+[node name="MeshInstance" type="MeshInstance" parent="." index="0"]
+
+transform = Transform( 5, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0 )
+layers = 1
+material_override = null
+cast_shadow = 1
+extra_cull_margin = 0.0
+use_in_baked_light = false
+lod_min_distance = 0.0
+lod_min_hysteresis = 0.0
+lod_max_distance = 0.0
+lod_max_hysteresis = 0.0
+mesh = SubResource( 2 )
+skeleton = NodePath("..")
+material/0 = null
+_sections_unfolded = [ "Transform" ]
+
+[node name="StaticBody" type="StaticBody" parent="MeshInstance" index="0"]
+
+input_ray_pickable = true
+input_capture_on_drag = false
+collision_layer = 1
+collision_mask = 1
+friction = 1.0
+bounce = 0.0
+constant_linear_velocity = Vector3( 0, 0, 0 )
+constant_angular_velocity = Vector3( 0, 0, 0 )
+
+[node name="CollisionShape" type="CollisionShape" parent="MeshInstance/StaticBody" index="0"]
+
+shape = SubResource( 3 )
+disabled = false
+
+[node name="DirectionalLight" type="DirectionalLight" parent="." index="1"]
+
+transform = Transform( 0.716772, 0.400001, -0.571172, 0, 0.819111, 0.573636, 0.697308, -0.411166, 0.587115, 0, 4.88453, 0 )
+layers = 1
+light_color = Color( 1, 1, 1, 1 )
+light_energy = 1.0
+light_indirect_energy = 1.0
+light_negative = false
+light_specular = 0.5
+light_bake_mode = 1
+light_cull_mask = -1
+shadow_enabled = false
+shadow_color = Color( 0, 0, 0, 1 )
+shadow_bias = 0.1
+shadow_contact = 0.0
+shadow_reverse_cull_face = false
+editor_only = false
+directional_shadow_mode = 2
+directional_shadow_split_1 = 0.1
+directional_shadow_split_2 = 0.2
+directional_shadow_split_3 = 0.5
+directional_shadow_blend_splits = false
+directional_shadow_normal_bias = 0.8
+directional_shadow_bias_split_scale = 0.25
+directional_shadow_depth_range = 0
+directional_shadow_max_distance = 200.0
+
+
